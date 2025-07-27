@@ -10,6 +10,7 @@ from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
 load_dotenv()
+
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
@@ -30,7 +31,7 @@ async def download_presentation(session, presentation_id, file_format):
     async with session.get(url, headers={"Authorization": f"Bearer {API_KEY}"}) as resp:
         if resp.status == 200:
             content = await resp.read()
-            filename = os.path.join(DOWNLOAD_DIR, f"presentation-{presentation_id}.{format}")
+            filename = os.path.join(DOWNLOAD_DIR, f"presentation-{presentation_id}.{file_format}")
             with open(filename, "wb") as f:
                 f.write(content)
             return filename
