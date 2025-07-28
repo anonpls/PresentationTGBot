@@ -16,6 +16,7 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 API_KEY = os.getenv("API_KEY")
 TG_TOKEN = os.getenv("TG_TOKEN")
+ADMIN_ID = os.getenv("ADMIN_ID")
 API_URL = "https://api.slidesgpt.com/v1"
 
 headers = {
@@ -25,6 +26,7 @@ headers = {
 
 bot = Bot(token=TG_TOKEN)
 dp = Dispatcher()
+greeted_users = set()
 
 async def download_presentation(session, presentation_id, file_format):
     url = f"{API_URL}/presentations/{presentation_id}/download"
@@ -58,10 +60,14 @@ async def cleanup_old_files():
 async def handle_generate(message: Message):
     prompt = message.text.replace("/generate", "").strip()
     if not prompt:
-        await message.answer("Укажи тему после команды: `/generate твоя тема`", parse_mode=ParseMode.MARKDOWN)
+        await message.answer("Укажи тему после команды: `/generate твоя тема`", parse_mode=ParseMode.MARKDOWN_V2)
         return
 
-    await message.answer(f"Генерирую презентацию на тему: *{prompt}*", parse_mode=ParseMode.MARKDOWN)
+    await message.answer(
+        f"Генерирую презентацию на тему: *{prompt}*\\.\\.\\.\n"
+        "Время ожидания 2\\-3 минуты ⏳",
+        parse_mode=ParseMode.MARKDOWN_V2
+        )
 
     payload = {
         "prompt": prompt,
@@ -81,22 +87,45 @@ async def handle_generate(message: Message):
                 await message.answer("Презентация не создана.")
                 return
 
-            await message.answer("Загружаю файл")
+            await bot.send_message(ADMIN_ID, f"📢 Пользователь @{message.from_user.username} создал презентацию")
+            # await message.answer("Загружаю файл")
 
             file_path = await download_presentation(session, presentation_id, "pptx")
             if file_path:
-                await message.answer_document(types.FSInputFile(file_path), caption=f"Готово: {prompt}")
+                await message.answer_document(
+                    types.FSInputFile(file_path), caption=f"Готово: {prompt} 📈🎉\n"
+                    "Ждём тебя ещё! 👨‍💻",
+                    parse_mode=ParseMode.MARKDOWN)
             else:
                 await message.answer("Ошибка при скачивании.")
 
-                
+
+@dp.message(Command("start"))
+async def start_handler(message: types.Message):
+    greeted_users.add(message.from_user.id)
+    await message.answer(
+            "👋 Привет\\! Я бот, который создаёт презентации по твоему запросу\\.\n"
+            "Напиши, например:\n\n"
+            "`/generate Презентация про ИИ`",
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
+       
 @dp.message()
 async def handle_any_message(message: types.Message):
-    if message.text and not message.text.startswith("/generate"):
+    if message.from_user.id not in greeted_users:
+        greeted_users.add(message.from_user.id)
         await message.answer(
-            "Привет! Я бот, который создаёт презентации по твоему запросу.\n"
+            "👋 Привет\\! Я бот, который создаёт презентации по твоему запросу\\.\n"
             "Напиши, например:\n\n"
-            "``/generate Презентация про ИИ``"
+            "`/generate Презентация про ИИ`",
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
+    else:
+        await message.answer(
+            "Немного не понял тебя 🙂\n"
+            "Напиши, например:\n\n"
+            "`/generate Презентация про ИИ`",
+            parse_mode=ParseMode.MARKDOWN_V2
         )
 
 if __name__ == "__main__":
