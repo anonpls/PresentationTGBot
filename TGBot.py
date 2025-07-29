@@ -129,4 +129,5 @@ async def handle_any_message(message: types.Message):
         )
 
 if __name__ == "__main__":
+    asyncio.get_event_loop().create_task(cleanup_old_files())
     asyncio.run(dp.start_polling(bot))
