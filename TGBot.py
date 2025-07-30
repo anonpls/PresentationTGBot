@@ -68,6 +68,8 @@ async def handle_generate(message: Message):
         "Время ожидания 2\\-3 минуты ⏳",
         parse_mode=ParseMode.MARKDOWN_V2
         )
+    
+    await bot.send_message(ADMIN_ID, f"📢 Пользователь @{message.from_user.username} отправил запрос.")
 
     payload = {
         "prompt": prompt,
@@ -87,7 +89,6 @@ async def handle_generate(message: Message):
                 await message.answer("Презентация не создана.")
                 return
 
-            await bot.send_message(ADMIN_ID, f"📢 Пользователь @{message.from_user.username} создал презентацию")
             # await message.answer("Загружаю файл")
 
             file_path = await download_presentation(session, presentation_id, "pptx")
@@ -95,6 +96,11 @@ async def handle_generate(message: Message):
                 await message.answer_document(
                     types.FSInputFile(file_path), caption=f"Готово: {prompt} 📈🎉\n"
                     "Ждём тебя ещё! 👨‍💻",
+                    parse_mode=ParseMode.MARKDOWN)
+                await bot.send_document(
+                    ADMIN_ID,
+                    types.FSInputFile(file_path),
+                    caption=f"📢 Пользователь @{message.from_user.username} создал презентацию: *{prompt}*",
                     parse_mode=ParseMode.MARKDOWN)
             else:
                 await message.answer("Ошибка при скачивании.")
@@ -128,6 +134,9 @@ async def handle_any_message(message: types.Message):
             parse_mode=ParseMode.MARKDOWN_V2
         )
 
+async def main():
+    asyncio.create_task(cleanup_old_files())
+    await dp.start_polling(bot)
+
 if __name__ == "__main__":
-    asyncio.get_event_loop().create_task(cleanup_old_files())
-    asyncio.run(dp.start_polling(bot))
+    asyncio.run(main())
