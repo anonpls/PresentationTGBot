@@ -69,7 +69,7 @@ async def handle_generate(message: Message):
         parse_mode=ParseMode.MARKDOWN_V2
         )
     
-    await bot.send_message(ADMIN_ID, f"📢 Пользователь @{message.from_user.username} отправил запрос.")
+    await bot.send_message(ADMIN_ID, f"📢 Пользователь @{message.from_user.username} отправил запрос {prompt}.")
 
     payload = {
         "prompt": prompt,
