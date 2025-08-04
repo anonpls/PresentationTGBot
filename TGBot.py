@@ -100,8 +100,7 @@ async def handle_generate(message: Message):
                 await bot.send_document(
                     ADMIN_ID,
                     types.FSInputFile(file_path),
-                    caption=f"📢 Пользователь @{message.from_user.username} создал презентацию: *{prompt}*",
-                    parse_mode=ParseMode.MARKDOWN)
+                    caption=f"📢 Пользователь @{message.from_user.username} создал презентацию: {prompt}")
             else:
                 await message.answer("Ошибка при скачивании.")
 
